@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Signal Radar</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f7f7f7; }
+    header { margin-bottom: 16px; }
+    nav a { margin-right: 12px; }
+    .card { background: white; padding: 16px; border-radius: 8px; margin-bottom: 12px; }
+    .tag { display: inline-block; background: #eef; padding: 2px 8px; border-radius: 6px; margin-right: 4px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>AI Signal Radar / AI 信号雷达</h1>
+    <nav>
+      <a href="/items">Dashboard</a>
+      <a href="/watchlist">Watchlist</a>
+      <a href="/suggested">Suggested</a>
+      <a href="/logout">Logout</a>
+    </nav>
+  </header>
+  {% block content %}{% endblock %}
+</body>
+</html>

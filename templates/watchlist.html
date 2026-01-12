@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Watchlist Entries</h2>
+  <form method="post" action="/watchlist/add">
+    <input type="text" name="name" placeholder="Name" required />
+    <select name="entry_type">
+      <option value="person">Person</option>
+      <option value="org">Org</option>
+      <option value="rss">RSS</option>
+    </select>
+    <input type="text" name="lab" placeholder="Lab/Org" />
+    <input type="text" name="x_handle" placeholder="X handle" />
+    <input type="text" name="website" placeholder="Website" />
+    <input type="text" name="youtube_channel" placeholder="YouTube channel" />
+    <input type="text" name="rss_url" placeholder="RSS URL" />
+    <button type="submit">Add</button>
+  </form>
+  <ul>
+    {% for entry in entries %}
+      <li>{{ entry.name }} ({{ entry.entry_type }}) - {{ entry.x_handle or entry.website or entry.rss_url }}</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
