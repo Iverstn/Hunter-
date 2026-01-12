@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - AI Signal Radar</title>
+</head>
+<body style="font-family: Arial; margin: 48px;">
+  <h2>AI Signal Radar Login</h2>
+  {% if error %}<p style="color:red">{{ error }}</p>{% endif %}
+  <form method="post" action="/login">
+    <label>Password:</label>
+    <input type="password" name="password" />
+    <button type="submit">Login</button>
+  </form>
+</body>
+</html>

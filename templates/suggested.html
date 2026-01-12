@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Suggested Watchlist</h2>
+  <p>These are auto-discovered suggestions. Approvals are manual (future UI).</p>
+  <ul>
+    {% for entry in entries %}
+      <li>
+        {{ entry.name }} - {{ entry.reason }} (approved: {{ entry.approved }})
+        {% if not entry.approved %}
+          <form method="post" action="/suggested/approve" style="display:inline;">
+            <input type="hidden" name="suggested_id" value="{{ entry.id }}" />
+            <input type="hidden" name="name" value="{{ entry.name }}" />
+            <input type="text" name="x_handle" placeholder="X handle" />
+            <button type="submit">Approve & Add</button>
+          </form>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}

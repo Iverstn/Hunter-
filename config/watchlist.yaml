@@ -1,0 +1,128 @@
+people:
+  - name: Noam Brown
+    lab: OpenAI
+    x_handle: noambrown
+    website: https://noambrown.github.io
+  - name: Jason Wei
+    lab: OpenAI
+    x_handle: _jasonwei
+    website: https://jasonwei.net
+  - name: Liam Fedus
+    lab: OpenAI
+    x_handle: liamfedus
+  - name: Wojciech Zaremba
+    lab: OpenAI
+    x_handle: woj_zaremba
+  - name: Alec Radford
+    lab: OpenAI
+    x_handle: AlecRad
+    github: https://github.com/newmu
+  - name: Demis Hassabis
+    lab: Google DeepMind
+    x_handle: demishassabis
+  - name: Jeff Dean
+    lab: Google DeepMind
+    x_handle: JeffDean
+  - name: Oriol Vinyals
+    lab: Google DeepMind
+    x_handle: OriolVinyalsML
+  - name: Jan Leike
+    lab: Anthropic
+    x_handle: janleike
+    website: https://aligned.substack.com
+  - name: Chris Olah
+    lab: Anthropic
+    x_handle: ch402
+    website: https://colah.github.io
+  - name: Amanda Askell
+    lab: Anthropic
+    x_handle: AmandaAskell
+    website: https://askell.io
+  - name: Jack Clark
+    lab: Anthropic
+    x_handle: jackclarkSF
+    website: https://importai.net
+  - name: Greg Yang
+    lab: xAI
+    x_handle: TheGregYang
+    website: https://thegregyang.com
+  - name: Toby Pohlen
+    lab: xAI
+    x_handle: TobyPhln
+  - name: Igor Babuschkin
+    lab: xAI
+    x_handle: ibab
+  - name: Andrej Karpathy
+    lab: Builder
+    x_handle: karpathy
+    website: https://karpathy.ai
+    youtube_channel: https://www.youtube.com/@AndrejKarpathy
+  - name: Chip Huyen
+    lab: Builder
+    x_handle: chipro
+    website: https://huyenchip.com
+  - name: Harrison Chase
+    lab: Builder
+    x_handle: hwchase17
+    website: https://blog.langchain.com
+  - name: Simon Willison
+    lab: Builder
+    x_handle: simonw
+    website: https://simonwillison.net
+  - name: Jerry Liu
+    lab: Builder
+    x_handle: jerryjliu0
+  - name: Shreya Rajpal
+    lab: Builder
+    x_handle: shreyar
+  - name: Gavin Baker
+    lab: Allocator
+    x_handle: GavinSBaker
+    website: https://gavinbaker.net
+  - name: Sonya Huang
+    lab: Allocator
+    x_handle: sonya
+  - name: Pat Grady
+    lab: Allocator
+    x_handle: pat_grady
+  - name: Elad Gil
+    lab: Allocator
+    x_handle: eladgil
+    website: https://eladgil.com
+  - name: David Sacks
+    lab: Allocator
+    x_handle: DavidSacks
+  - name: Dylan Patel
+    lab: Allocator
+    x_handle: dylan522p
+    website: https://semianalysis.com
+  - name: Nathan Benaich
+    lab: Allocator
+    x_handle: nathanbenaich
+    website: https://nathanbenaich.com
+
+orgs:
+  - name: OpenAI
+    x_handle: OpenAI
+    website: https://openai.com/blog
+  - name: Google DeepMind
+    x_handle: DeepMind
+    website: https://deepmind.google/discover/blog
+  - name: Anthropic
+    x_handle: AnthropicAI
+    website: https://www.anthropic.com/news
+  - name: xAI
+    x_handle: xai
+    website: https://x.ai/news
+
+rss_feeds:
+  - name: aligned.substack.com
+    url: https://aligned.substack.com/feed
+  - name: importai.net
+    url: https://importai.substack.com/feed
+  - name: semianalysis.com
+    url: https://www.semianalysis.com/feed
+  - name: latent.space
+    url: https://www.latent.space/feed
+  - name: dwarkeshpatel.com
+    url: https://www.dwarkeshpatel.com/feed

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>{{ item.title }}</h2>
+  <p>{{ item.source_type }} | {{ item.author }} | {{ item.published_at }}</p>
+  <p>Score: {{ item.score }}</p>
+  <p>Tags: {{ item.tags }}</p>
+  <p>Summary: {{ item.summary }}</p>
+  <p>Analysis: {{ item.analysis }}</p>
+  <p>Excerpt: {{ item.excerpt }}</p>
+  <p>Content: {{ item.content }}</p>
+  <a href="{{ item.url }}">Original link</a>
+</div>
+{% endblock %}
