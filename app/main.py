@@ -207,9 +207,9 @@ async def generate_report(request: Request, days: int = Form(7)) -> HTMLResponse
 @app.get("/reports/download/{filename}")
 async def download_report_file(request: Request, filename: str) -> FileResponse:
     require_login(request)
-    reports_dir = Path(settings.data_dir) / "reports"
+    reports_dir = (Path(settings.data_dir) / "reports").resolve()
     file_path = (reports_dir / filename).resolve()
-    if not file_path.exists() or reports_dir not in file_path.parents:
+    if not file_path.exists() or not file_path.is_relative_to(reports_dir):
         raise HTTPException(status_code=404)
     media_type = "application/octet-stream"
     if file_path.suffix == ".pdf":
