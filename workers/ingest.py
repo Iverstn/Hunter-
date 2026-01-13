@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 import logging
 
+from app.content import normalize_published_at
 from app.db import insert_item
 from workers.content_extract import extract_excerpt
 from workers.llm import LLMClient
@@ -27,6 +28,10 @@ LOGGER = logging.getLogger(__name__)
 def process_items(raw_items: list[dict]) -> int:
     inserted = 0
     for item in raw_items:
+        published_at = normalize_published_at(item.get("published_at"))
+        if not published_at:
+            continue
+        item["published_at"] = published_at
         text = normalize_text(" ".join(filter(None, [item.get("title"), item.get("excerpt"), item.get("content")])) )
         filter_result = rule_filter(text)
         if not filter_result.keep:
