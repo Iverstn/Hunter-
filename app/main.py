@@ -67,6 +67,7 @@ def run_cleanup() -> None:
 @app.on_event("startup")
 async def startup_event() -> None:
     init_db()
+    run_cleanup()
     watchlist = load_watchlist()
     if not watchlist:
         legacy_watchlist = load_watchlist_yaml()
@@ -108,13 +109,21 @@ async def logout(request: Request) -> RedirectResponse:
 
 
 @app.get("/items", response_class=HTMLResponse)
-async def items_view(request: Request, source: str | None = None, search: str | None = None, tags: str | None = None, min_score: float | None = None) -> HTMLResponse:
+async def items_view(
+    request: Request,
+    source: str | None = None,
+    search: str | None = None,
+    tags: str | None = None,
+    min_score: float | None = None,
+    sort: str | None = None,
+) -> HTMLResponse:
     require_login(request)
     filters = {
         "source_type": source,
         "search": search,
         "tags": tags,
         "min_score": min_score,
+        "sort": sort,
     }
     rows = query_items(filters)
     return TEMPLATES.TemplateResponse(

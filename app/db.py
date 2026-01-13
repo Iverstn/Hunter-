@@ -1,10 +1,10 @@
 import json
-import os
 import sqlite3
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Iterable
 
+from app.dates import combine_date_utc, utc_now
 from app.settings import settings
 
 DB_PATH = Path(settings.data_dir) / "radar.db"
@@ -175,7 +175,11 @@ def query_items(filters: dict) -> list[sqlite3.Row]:
         query += " AND (title LIKE ? OR excerpt LIKE ? OR content LIKE ?)"
         params.extend([f"%{filters['search']}%"] * 3)
 
-    query += " ORDER BY published_at DESC NULLS LAST, ingested_at DESC"
+    sort = filters.get("sort")
+    if sort == "published_at_desc":
+        query += " ORDER BY published_at DESC NULLS LAST, ingested_at DESC"
+    else:
+        query += " ORDER BY published_at DESC NULLS LAST, ingested_at DESC"
     rows = cursor.execute(query, params).fetchall()
     conn.close()
     return rows
@@ -189,11 +193,22 @@ def get_item(item_id: int) -> sqlite3.Row | None:
     return row
 
 
-def cleanup_old_items(days: int = 90) -> int:
-    cutoff = datetime.utcnow() - timedelta(days=days)
+def cleanup_old_items(now: datetime | None = None) -> int:
+    now = now or utc_now()
+    retention_cutoff = now - timedelta(days=settings.content_max_age_days)
+    min_date_cutoff = combine_date_utc(settings.content_min_date)
     conn = get_connection()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM items WHERE ingested_at < ?", (cutoff.isoformat(),))
+    cursor.execute(
+        """
+        DELETE FROM items
+        WHERE published_at IS NULL
+           OR TRIM(published_at) = ''
+           OR published_at < ?
+           OR published_at < ?
+        """,
+        (min_date_cutoff.isoformat(), retention_cutoff.isoformat()),
+    )
     deleted = cursor.rowcount
     conn.commit()
     conn.close()

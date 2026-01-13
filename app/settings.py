@@ -1,3 +1,5 @@
+from datetime import date
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +29,8 @@ class Settings(BaseSettings):
 
     session_secret: str = "dev-secret"
     data_dir: str = "data"
+    content_min_date: date = date(2025, 11, 1)
+    content_max_age_days: int = 7
 
 
 settings = Settings()

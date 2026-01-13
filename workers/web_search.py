@@ -7,6 +7,7 @@ from typing import Iterable
 
 import requests
 
+from app.content import normalize_published_at
 from app.db import insert_item
 from app.settings import settings
 from workers.watchlist import all_websites, all_x_handles, load_watchlist
@@ -66,6 +67,10 @@ def run_web_search() -> dict:
     items = search_web(queries)
     inserted = 0
     for item in items:
+        published_at = normalize_published_at(item.get("published_at"))
+        if not published_at:
+            continue
+        item["published_at"] = published_at
         if insert_item(item):
             inserted += 1
     LOGGER.info(
