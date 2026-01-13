@@ -18,3 +18,4 @@ weasyprint==62.3
 pytest==8.2.2
 itsdangerous>=2.1.2
 httpx==0.27.2
+pydyf==0.11.0
