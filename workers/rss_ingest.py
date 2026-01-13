@@ -29,14 +29,3 @@ def ingest_feeds(feeds: Iterable[str]) -> list[dict]:
                 }
             )
     return items
-
-
-if __name__ == "__main__":
-    from workers.ingest import process_items
-    from workers.watchlist import all_rss_feeds, load_watchlist
-
-    watchlist = load_watchlist()
-    feeds = all_rss_feeds(watchlist)
-    items = ingest_feeds(feeds)
-    inserted = process_items(items)
-    print(f"[rss_ingest] feeds={len(feeds)} fetched={len(items)} inserted={inserted}")

@@ -9,11 +9,11 @@ from workers.relevance import normalize_text, rule_filter
 from workers.scoring import rule_score
 from workers.watchlist import (
     all_rss_feeds,
+    all_websites,
     all_x_handles,
     all_youtube_channels,
-    load_watchlist,
 )
-from workers.web_search import build_queries, search_web
+from workers.web_search import search_web
 from workers.rss_ingest import ingest_feeds
 from workers.x_client import fetch_x_posts
 from workers.youtube_client import fetch_videos
@@ -48,70 +48,26 @@ def process_items(raw_items: list[dict]) -> int:
     return inserted
 
 
-def run_ingestion(watchlist: list[dict]) -> dict:
-    errors: dict[str, str] = {}
-    fetched_counts: dict[str, int] = {}
-    inserted_counts: dict[str, int] = {}
-
-    x_handles = all_x_handles(watchlist)
-    youtube_channels = all_youtube_channels(watchlist)
-    web_queries = build_queries(watchlist)
-    rss_feeds = all_rss_feeds(watchlist)
-
-    watchlist_counts = {
-        "x": len(x_handles),
-        "youtube": len(youtube_channels),
-        "web": len(web_queries),
-        "rss": len(rss_feeds),
-    }
-
-    def _fetch(label: str, func) -> list[dict]:
-        try:
-            items = func()
-        except Exception as exc:
-            errors[label] = str(exc)
-            print(f"[ingest] {label} fetch failed: {exc}")
-            items = []
-        fetched_counts[label] = len(items)
-        return items
-
-    def _process(label: str, items: list[dict]) -> int:
-        try:
-            inserted = process_items(items)
-        except Exception as exc:
-            errors[label] = str(exc)
-            print(f"[ingest] {label} processing failed: {exc}")
-            inserted = 0
-        inserted_counts[label] = inserted
-        return inserted
-
-    x_items = _fetch("x", lambda: fetch_x_posts(x_handles))
-    yt_items = _fetch("youtube", lambda: fetch_videos(youtube_channels))
-    web_items = _fetch("web", lambda: search_web(web_queries))
-    rss_items = _fetch("rss", lambda: ingest_feeds(rss_feeds))
+def run_ingestion(watchlist: dict) -> dict:
+    x_items = fetch_x_posts(all_x_handles(watchlist))
+    yt_items = fetch_videos(all_youtube_channels(watchlist))
+    web_queries = [*all_websites(watchlist), *all_x_handles(watchlist)]
+    web_items = search_web(web_queries)
+    rss_items = ingest_feeds(all_rss_feeds(watchlist))
 
     total = 0
-    total += _process("x", x_items)
-    total += _process("youtube", yt_items)
-    total += _process("web", web_items)
-    total += _process("rss", rss_items)
-
-    print("[ingest] Watchlist counts:", watchlist_counts)
-    print("[ingest] Fetched counts:", fetched_counts)
-    print("[ingest] Inserted counts:", inserted_counts)
-    if errors:
-        print("[ingest] Errors:", errors)
-    print(f"[ingest] Summary: inserted={total}")
+    total += process_items(x_items)
+    total += process_items(yt_items)
+    total += process_items(web_items)
+    total += process_items(rss_items)
 
     return {
         "timestamp": datetime.utcnow().isoformat(),
         "inserted": total,
-        "watchlist": watchlist_counts,
-        "fetched": fetched_counts,
-        "inserted_by_source": inserted_counts,
-        "errors": errors,
+        "sources": {
+            "x": len(x_items),
+            "youtube": len(yt_items),
+            "web": len(web_items),
+            "rss": len(rss_items),
+        },
     }
-
-
-if __name__ == "__main__":
-    run_ingestion(load_watchlist())
