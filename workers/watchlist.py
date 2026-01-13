@@ -1,116 +1,109 @@
+from __future__ import annotations
+
+from datetime import datetime
 from pathlib import Path
-import yaml
+import sqlite3
+from typing import Iterable
+
+from app.settings import settings
 
 
-WATCHLIST_PATH = Path("config/watchlist.yaml")
+DEFAULT_DB_PATH = Path("/app/data/radar.db")
 
 
-def load_watchlist() -> dict:
-    if not WATCHLIST_PATH.exists():
-        return {"people": [], "orgs": [], "rss_feeds": []}
-    with WATCHLIST_PATH.open("r", encoding="utf-8") as handle:
-        return yaml.safe_load(handle) or {}
+def _resolve_db_path(db_path: str | Path) -> Path:
+    path = Path(db_path)
+    if path.exists():
+        return path
+    fallback = Path(settings.data_dir) / "radar.db"
+    return fallback if fallback.exists() else path
 
 
-def save_watchlist(data: dict) -> None:
-    WATCHLIST_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with WATCHLIST_PATH.open("w", encoding="utf-8") as handle:
-        yaml.safe_dump(data, handle, sort_keys=False, allow_unicode=True)
-
-
-def add_watchlist_entry(entry: dict) -> None:
-    data = load_watchlist()
-    entry_type = entry.get("entry_type", "person")
-    if entry_type == "rss":
-        data.setdefault("rss_feeds", []).append({"name": entry.get("name"), "url": entry.get("rss_url")})
-    elif entry_type == "org":
-        data.setdefault("orgs", []).append(
-            {
-                "name": entry.get("name"),
-                "x_handle": entry.get("x_handle"),
-                "website": entry.get("website"),
-            }
+def _ensure_schema(cursor: sqlite3.Cursor) -> None:
+    cursor.execute(
+        """
+        CREATE TABLE IF NOT EXISTS watchlist_entries (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            entry_type TEXT NOT NULL,
+            lab TEXT,
+            x_handle TEXT,
+            website TEXT,
+            youtube_channel TEXT,
+            rss_url TEXT,
+            created_at TEXT NOT NULL
         )
-    else:
-        data.setdefault("people", []).append(
-            {
-                "name": entry.get("name"),
-                "lab": entry.get("lab"),
-                "x_handle": entry.get("x_handle"),
-                "website": entry.get("website"),
-                "youtube_channel": entry.get("youtube_channel"),
-            }
-        )
-    save_watchlist(data)
+        """
+    )
 
 
-def flatten_watchlist(data: dict) -> list[dict]:
-    entries: list[dict] = []
-    for person in data.get("people", []):
-        entries.append(
-            {
-                "name": person.get("name"),
-                "entry_type": "person",
-                "lab": person.get("lab"),
-                "x_handle": person.get("x_handle"),
-                "website": person.get("website"),
-                "youtube_channel": person.get("youtube_channel"),
-            }
-        )
-    for org in data.get("orgs", []):
-        entries.append(
-            {
-                "name": org.get("name"),
-                "entry_type": "org",
-                "lab": org.get("name"),
-                "x_handle": org.get("x_handle"),
-                "website": org.get("website"),
-            }
-        )
-    for feed in data.get("rss_feeds", []):
-        entries.append(
-            {
-                "name": feed.get("name"),
-                "entry_type": "rss",
-                "rss_url": feed.get("url"),
-            }
-        )
-    return entries
+def load_watchlist(db_path: str | Path = DEFAULT_DB_PATH) -> list[dict]:
+    path = _resolve_db_path(db_path)
+    if not path.exists():
+        return []
+    conn = sqlite3.connect(path)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    _ensure_schema(cursor)
+    rows = cursor.execute(
+        """
+        SELECT name, lab, x_handle, website, youtube_channel, rss_url
+        FROM watchlist_entries
+        ORDER BY name
+        """
+    ).fetchall()
+    conn.close()
+    return [
+        {
+            "name": row["name"],
+            "lab": row["lab"],
+            "x_handle": row["x_handle"],
+            "website": row["website"],
+            "youtube_channel": row["youtube_channel"],
+            "rss_url": row["rss_url"],
+        }
+        for row in rows
+    ]
 
 
-def all_x_handles(data: dict) -> list[str]:
-    handles = []
-    for group in (data.get("people", []), data.get("orgs", [])):
-        for entry in group:
-            handle = entry.get("x_handle")
-            if handle:
-                handles.append(handle)
-    return handles
+def add_watchlist_entry(entry: dict, db_path: str | Path = DEFAULT_DB_PATH) -> None:
+    path = _resolve_db_path(db_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path)
+    cursor = conn.cursor()
+    _ensure_schema(cursor)
+    cursor.execute(
+        """
+        INSERT INTO watchlist_entries
+        (name, entry_type, lab, x_handle, website, youtube_channel, rss_url, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            entry.get("name"),
+            entry.get("entry_type", "person"),
+            entry.get("lab"),
+            entry.get("x_handle"),
+            entry.get("website"),
+            entry.get("youtube_channel"),
+            entry.get("rss_url"),
+            datetime.utcnow().isoformat(),
+        ),
+    )
+    conn.commit()
+    conn.close()
 
 
-def all_youtube_channels(data: dict) -> list[str]:
-    channels = []
-    for person in data.get("people", []):
-        channel = person.get("youtube_channel")
-        if channel:
-            channels.append(channel)
-    return channels
+def all_x_handles(entries: Iterable[dict]) -> list[str]:
+    return [entry["x_handle"] for entry in entries if entry.get("x_handle")]
 
 
-def all_websites(data: dict) -> list[str]:
-    sites = []
-    for group in (data.get("people", []), data.get("orgs", [])):
-        for entry in group:
-            website = entry.get("website")
-            if website:
-                sites.append(website)
-    return sites
+def all_youtube_channels(entries: Iterable[dict]) -> list[str]:
+    return [entry["youtube_channel"] for entry in entries if entry.get("youtube_channel")]
 
 
-def all_rss_feeds(data: dict) -> list[str]:
-    feeds = []
-    for feed in data.get("rss_feeds", []):
-        url = feed.get("url")
-        if url:
-            feeds.append(url)
-    return feeds
+def all_websites(entries: Iterable[dict]) -> list[str]:
+    return [entry["website"] for entry in entries if entry.get("website")]
+
+
+def all_rss_feeds(entries: Iterable[dict]) -> list[str]:
+    return [entry["rss_url"] for entry in entries if entry.get("rss_url")]
