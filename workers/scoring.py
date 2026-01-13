@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 IMPORTANT_KEYWORDS = ["launch", "paper", "benchmark", "policy", "export control", "datacenter"]
 SOURCE_WEIGHT = {"x": 1.0, "youtube": 1.2, "web": 1.1, "rss": 1.0}
@@ -15,8 +15,13 @@ def rule_score(item: dict) -> float:
     if published_at:
         try:
             published_dt = datetime.fromisoformat(published_at)
-            age_hours = (datetime.utcnow() - published_dt).total_seconds() / 3600
+            if published_dt.tzinfo is None:
+                published_dt = published_dt.replace(tzinfo=timezone.utc)
+            else:
+                published_dt = published_dt.astimezone(timezone.utc)
+            now = datetime.now(timezone.utc)
+            age_hours = (now - published_dt).total_seconds() / 3600
             score += max(0.0, 2.0 - age_hours / 24)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
     return round(score, 2)
