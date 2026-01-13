@@ -25,7 +25,12 @@ from workers.digest import build_digest_html, build_digest_text, fetch_top_items
 from workers.ingest import run_ingestion
 from workers.report_generator import fetch_items, write_report
 from workers.send_email import send_email
-from workers.watchlist import add_watchlist_entry, flatten_watchlist, load_watchlist
+from workers.watchlist import (
+    add_watchlist_entry,
+    flatten_watchlist,
+    load_watchlist,
+    load_watchlist_yaml,
+)
 
 app = FastAPI(title="AI Signal Radar")
 app.add_middleware(SessionMiddleware, secret_key=settings.session_secret)
@@ -62,8 +67,12 @@ def run_cleanup() -> None:
 @app.on_event("startup")
 async def startup_event() -> None:
     init_db()
-    watchlist = flatten_watchlist(load_watchlist())
-    upsert_watchlist(watchlist)
+    watchlist = load_watchlist()
+    if not watchlist:
+        legacy_watchlist = load_watchlist_yaml()
+        legacy_entries = flatten_watchlist(legacy_watchlist)
+        if legacy_entries:
+            upsert_watchlist(legacy_entries)
     scheduler.add_job(run_hourly_ingest, "interval", hours=1)
     scheduler.add_job(run_daily_digest, "cron", hour=8, minute=30)
     scheduler.add_job(run_cleanup, "cron", hour=2, minute=0)
@@ -153,8 +162,6 @@ async def watchlist_add(
             "rss_url": rss_url,
         }
     )
-    watchlist = flatten_watchlist(load_watchlist())
-    upsert_watchlist(watchlist)
     return RedirectResponse("/watchlist", status_code=302)
 
 
@@ -175,7 +182,6 @@ async def suggested_approve(
     require_login(request)
     add_watchlist_entry({"name": name, "entry_type": "person", "x_handle": x_handle})
     approve_suggested_person(suggested_id)
-    upsert_watchlist(flatten_watchlist(load_watchlist()))
     return RedirectResponse("/suggested", status_code=302)
 
 
