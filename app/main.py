@@ -185,12 +185,58 @@ async def suggested_approve(
     return RedirectResponse("/suggested", status_code=302)
 
 
-@app.post("/reports/generate")
-async def generate_report(request: Request, days: int = Form(7)) -> FileResponse:
+@app.post("/reports/generate", response_class=HTMLResponse)
+async def generate_report(request: Request, days: int = Form(7)) -> HTMLResponse:
     require_login(request)
     items = fetch_items(days=days)
     report_paths = write_report(items)
-    return FileResponse(report_paths["markdown"], filename=Path(report_paths["markdown"]).name)
+    md_filename = Path(report_paths["markdown"]).name
+    pdf_filename = Path(report_paths["pdf"]).name if report_paths["pdf"] else None
+    return TEMPLATES.TemplateResponse(
+        "report_links.html",
+        {
+            "request": request,
+            "report_paths": report_paths,
+            "days": days,
+            "md_filename": md_filename,
+            "pdf_filename": pdf_filename,
+        },
+    )
+
+
+@app.get("/reports/download/{filename}")
+async def download_report_file(request: Request, filename: str) -> FileResponse:
+    require_login(request)
+    reports_dir = (Path(settings.data_dir) / "reports").resolve()
+    file_path = (reports_dir / filename).resolve()
+    if not file_path.exists() or not file_path.is_relative_to(reports_dir):
+        raise HTTPException(status_code=404)
+    media_type = "application/octet-stream"
+    if file_path.suffix == ".pdf":
+        media_type = "application/pdf"
+    elif file_path.suffix == ".md":
+        media_type = "text/markdown"
+    else:
+        raise HTTPException(status_code=404)
+    return FileResponse(file_path, media_type=media_type, filename=file_path.name)
+
+
+@app.get("/report")
+async def download_report(request: Request, days: int = 7, format: str = "md") -> FileResponse:
+    require_login(request)
+    items = fetch_items(days=days)
+    report_paths = write_report(items)
+    normalized_format = format.lower()
+    if normalized_format == "pdf":
+        if report_paths["pdf"]:
+            pdf_path = Path(report_paths["pdf"])
+            return FileResponse(pdf_path, media_type="application/pdf", filename=pdf_path.name)
+        error_message = report_paths.get("pdf_error") or "PDF generation failed; returning Markdown."
+        md_path = Path(report_paths["markdown"])
+        headers = {"X-Report-Error": error_message}
+        return FileResponse(md_path, media_type="text/markdown", filename=md_path.name, headers=headers)
+    md_path = Path(report_paths["markdown"])
+    return FileResponse(md_path, media_type="text/markdown", filename=md_path.name)
 
 
 @app.post("/ingest/run")
