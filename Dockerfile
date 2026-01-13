@@ -3,7 +3,17 @@ FROM python:3.11-slim
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz0b libharfbuzz-subset0 libffi-dev \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libcairo2 \
+        libgdk-pixbuf2.0-0 \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        libharfbuzz-subset0 \
+        libffi-dev \
+        fonts-noto-cjk \
+        fonts-noto-color-emoji \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/requirements.txt

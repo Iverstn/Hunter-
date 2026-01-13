@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="card">
+  <h2>Report generated</h2>
+  <p>Days covered: {{ days }}</p>
+  <ul>
+    <li>
+      <a href="/reports/download/{{ md_filename }}">
+        Download Markdown
+      </a>
+    </li>
+    {% if pdf_filename %}
+      <li>
+        <a href="/reports/download/{{ pdf_filename }}">
+          Download PDF
+        </a>
+      </li>
+    {% else %}
+      <li>PDF generation failed. Please download Markdown instead.</li>
+      {% if report_paths.pdf_error %}
+        <li><strong>Error:</strong> {{ report_paths.pdf_error }}</li>
+      {% endif %}
+    {% endif %}
+  </ul>
+  <a href="/items">Back to items</a>
+</div>
+{% endblock %}
