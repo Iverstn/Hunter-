@@ -37,7 +37,7 @@ The app runs a background scheduler:
 
 ## Watchlist
 
-Edit `config/watchlist.yaml` or use the Watchlist UI to add/remove people, orgs, websites, and RSS feeds. Restart the container after changes.
+Use the Watchlist UI to add/remove people, orgs, websites, and RSS feeds. Entries are stored in the SQLite database.
 
 ## Reports
 
@@ -51,6 +51,24 @@ source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+
+## Acceptance checks
+
+Run ingestion modules directly:
+
+```bash
+python -m workers.web_search
+python -m workers.rss_ingest
+python -m workers.ingest
+```
+
+Confirm items increased:
+
+```bash
+python -c "import sqlite3; con=sqlite3.connect('/app/data/radar.db'); cur=con.cursor(); print(cur.execute('select count(*) from items').fetchone()[0])"
+```
+
+Verify the dashboard `/items` view returns a non-empty list.
 
 ## Notes
 
