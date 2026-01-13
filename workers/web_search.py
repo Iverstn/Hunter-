@@ -67,10 +67,10 @@ def run_web_search() -> dict:
     items = search_web(queries)
     inserted = 0
     for item in items:
-        published_at = normalize_published_at(item.get("published_at"))
-        if not published_at:
+        norm = normalize_published_at(item.get("published_at"))
+        if norm is None:
             continue
-        item["published_at"] = published_at
+        item["published_at"] = norm
         if insert_item(item):
             inserted += 1
     LOGGER.info(

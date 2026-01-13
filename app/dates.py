@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timezone
+from email.utils import parsedate_to_datetime
 
 from dateutil import parser
 
@@ -21,7 +22,12 @@ def parse_datetime(value: str | None) -> datetime | None:
         try:
             parsed = parser.parse(value)
         except (ValueError, TypeError):
-            return None
+            try:
+                parsed = parsedate_to_datetime(value)
+            except (TypeError, ValueError):
+                return None
+            if parsed is None:
+                return None
     if parsed.tzinfo is None:
         return parsed.replace(tzinfo=timezone.utc)
     return parsed.astimezone(timezone.utc)
