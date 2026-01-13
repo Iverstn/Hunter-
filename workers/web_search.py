@@ -2,13 +2,21 @@ from __future__ import annotations
 
 import hashlib
 from datetime import datetime
+import logging
 from typing import Iterable
 
 import requests
 
+from app.db import insert_item
 from app.settings import settings
+from workers.watchlist import all_websites, all_x_handles, load_watchlist
 
 API_BASE = "https://www.googleapis.com/customsearch/v1"
+LOGGER = logging.getLogger(__name__)
+
+
+def build_queries_from_watchlist(watchlist: list[dict]) -> list[str]:
+    return [*all_websites(watchlist), *all_x_handles(watchlist)]
 
 
 def search_web(queries: Iterable[str]) -> list[dict]:
@@ -50,3 +58,31 @@ def search_web(queries: Iterable[str]) -> list[dict]:
                 }
             )
     return items
+
+
+def run_web_search() -> dict:
+    watchlist = load_watchlist()
+    queries = build_queries_from_watchlist(watchlist)
+    items = search_web(queries)
+    inserted = 0
+    for item in items:
+        if insert_item(item):
+            inserted += 1
+    LOGGER.info(
+        "web_search_summary watchlist_len=%s queries_len=%s fetched_count=%s inserted_count=%s",
+        len(watchlist),
+        len(queries),
+        len(items),
+        inserted,
+    )
+    return {
+        "watchlist_len": len(watchlist),
+        "queries_len": len(queries),
+        "fetched_count": len(items),
+        "inserted_count": inserted,
+    }
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    run_web_search()
