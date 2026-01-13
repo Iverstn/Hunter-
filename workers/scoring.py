@@ -22,6 +22,6 @@ def rule_score(item: dict) -> float:
             now = datetime.now(timezone.utc)
             age_hours = (now - published_dt).total_seconds() / 3600
             score += max(0.0, 2.0 - age_hours / 24)
-        except ValueError:
+        except (ValueError, TypeError):
             pass
     return round(score, 2)
